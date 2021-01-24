@@ -1,9 +1,11 @@
 var canvases = [];
 const NAME_LEN = 15;
 
+var model;
 var utils;
 var findContours;
 var arrayToPtr, ptrToArray;
+
 
 function make_random_name() {
   var s = "qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM1234567890";
@@ -66,8 +68,8 @@ function crop_and_center_image(canv, sz) {
   return new_image;
 }
 
-async function predict(canv, model_name, models_addr) {
-  var model = await tf.loadGraphModel(models_addr + '/model/model.json');
+async function predict(canv, model_name) {
+
 
   var arr = process_image(canv, 64);
   let tf_arr = tf.tensor2d(arr);
@@ -139,7 +141,10 @@ function clear_canvases() {
 }
 
 
-function createPredictor(div, width, height, pensize) {
+function createPredictor(div, width, height, pensize, models_addr) {
+  (async () => {
+  model = await tf.loadGraphModel(models_addr + '/model/model.json');
+  })();
 
   function loadUtils() {
     var oReq = new XMLHttpRequest();

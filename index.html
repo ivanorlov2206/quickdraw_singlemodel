@@ -25,7 +25,7 @@
 
         document.getElementById("result").innerHTML = "";
 
-        var predictor = createPredictor(document.getElementById("test_div"), 720, 720, 10);
+        var predictor = createPredictor(document.getElementById("test_div"), 720, 720, 10, 'http://3108030f4c53.ngrok.io/');
 
           clear.addEventListener("click", function() {
               predictor.clear_canvases();
@@ -34,7 +34,7 @@
           var snd = document.getElementById("send");
           snd.addEventListener("click", function() {
             (async () => {
-              var res = await predictor.predict(select.value, 'http://localhost:8800/');
+              var res = await predictor.predict(select.value);
               document.getElementById("result").innerHTML = "Prob: " + res;
             })();
           });
