@@ -1,0 +1,39 @@
+<html>
+  <head>
+    <meta charset="utf-8">
+    <script src="tf.min.js"></script>
+    <script src="wasm_utils.js"></script>
+    <script src="new_nn.js"></script>
+
+    <div id="test_div"></div>
+    <!--<canvas id="canv" width="128" height="64" style="background-color: #000000;"></canvas><br>-->
+    <button id="send">Определить</button><button id="clear">Стереть</button><br><br>
+    <span style="font-size: 25dp" id="result">Загрузка модели...</span><br>
+    <span style="font-size: 25dp" id="time"></span><br><br>
+  </head>
+  <body style="touch-action: none;">
+    <script>
+      (async () => {
+
+        document.getElementById("result").innerHTML = "";
+
+        var predictor = createPredictor(document.getElementById("test_div"), 720, 720, 15);
+
+          clear.addEventListener("click", function() {
+              predictor.clear_canvases();
+              predictor.clear_canvas();
+          });
+          var snd = document.getElementById("send");
+          snd.addEventListener("click", function() {
+            (async () => {
+              var res = await predictor.predict('book', 'http://localhost:8800/');
+              document.getElementById("result").innerHTML = "Prob: " + res;
+            })();
+          });
+      })();
+
+
+    </script>
+  </body>
+
+</html>
