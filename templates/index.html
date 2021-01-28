@@ -46,12 +46,12 @@
           }
       });
       var worker = new Worker('worker.js');
-      var predictord = createPredictor(document.getElementById("test_div"), 300, 300, 10, 'http://127.0.0.1:5000');
+      var predictord = createPredictor(document.getElementById("test_div"), 300, 300, 10, 'https://quickdraw-pwkc.onrender.com');
       var predictor = predictord[0];
       var rd = document.getElementById("result");
       rd.innerHTML = "";
         var worker = new Worker('worker.js');
-        worker.postMessage('start;;;http://127.0.0.1:5000')
+        worker.postMessage('start;;;https://quickdraw-pwkc.onrender.com')
 
         worker.onmessage = function(msg) {
           var pars = msg.data.split(';;;');
