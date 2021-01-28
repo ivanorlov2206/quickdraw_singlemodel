@@ -55,20 +55,24 @@ function crop_and_center_image(canv, sz) {
   var nc = new_image.getContext('2d');
   nc.fillStyle = "black";
   nc.fillRect(0, 0, sz, sz);
-  for (var x = 0; x < sz; x++) {
-    for (var y = 0; y < sz; y++) {
+  console.time('copy');
+  var dat = imgc.getImageData(0, 0, nw, nh);
+  nc.putImageData(dat, ix, iy);
+  /*for (var x = ix; x < ix + nw; x++) {
+    for (var y = iy; y < iy + nh; y++) {
       if (x >= ix && x < ix + nw && y >= iy && y < iy + nh) {
         var dat = imgc.getImageData(x - ix, y - iy, 1, 1);
         if (dat.data[0] != 0)
           nc.putImageData(dat, x, y);
       }
     }
-  }
+  }*/
+  console.timeEnd('copy');
 
   return new_image;
 }
 
-async function predict(canv, model_name) {
+async function predict(canv) {
 
 
   var arr = process_image(canv, 64);
@@ -80,13 +84,10 @@ async function predict(canv, model_name) {
 
   const {values, indices} = tf.topk(model.predict(tf_arr), 5);
   var ind_js = Array.from(indices.dataSync());
-  for (var i = 0; i < ind_js.length; i++){
-    console.log(classes[ind_js[i]]);
-    if(classes[ind_js[i]] == model_name) {
-      return true;
-    }
-  }
-  return false;
+  var val_js = Array.from(values.dataSync());
+  return ind_js.map(function(e, i) {
+    return [classes[ind_js[i]], val_js[i]];
+  });
 }
 
 function image_to_array(canv, sz) {
@@ -129,7 +130,9 @@ function process_image(canv, size) {
 
   var left = contours[0], top = contours[1], w = contours[2] - contours[0], h = contours[3] - contours[1];
   cropped.getContext('2d').drawImage(canv, left - border_h / 2, top - border_v / 2, w + left + border_h / 2, h + top + border_v / 2, 0, 0, w + left + border_h / 2, h + top + border_v / 2);
+  console.time('121');
   var centered = crop_and_center_image(cropped, size);
+  console.timeEnd('121');
   return image_to_array(centered, size);
 }
 
@@ -143,7 +146,9 @@ function clear_canvases() {
 
 function createPredictor(div, width, height, pensize, models_addr) {
   (async () => {
+    document.getElementById('result').innerHTML = "Загрузка модели...";
   model = await tf.loadGraphModel(models_addr + '/model/model.json');
+  document.getElementById('result').innerHTML = "Загружено!...";
   })();
 
   function loadUtils() {
@@ -191,31 +196,111 @@ function createPredictor(div, width, height, pensize, models_addr) {
 
   var mouse = {x: 0, y: 0};
   var draw = false;
+  var isp = false;
+
+  window.mobileAndTabletCheck = function() {
+    return typeof(window.orientation) !== 'undefined';
+  };
+
+  var ongoingTouches = [];
+
+  if (!window.mobileAndTabletCheck()) {
 
   canvas.addEventListener("pointerdown", function(e) {
-      mouse.x = e.pageX - this.offsetLeft;
-      mouse.y = e.pageY - this.offsetTop;
-      draw = true;
-  });
-  canvas.addEventListener("pointermove", function(e) {
-      if (draw == true) {
           mouse.x = e.pageX - this.offsetLeft;
           mouse.y = e.pageY - this.offsetTop;
+          draw = true;
+      });
+      canvas.addEventListener("pointermove", function(e) {
+        isp = true;
+          if (draw == true) {
+              mouse.x = e.pageX - this.offsetLeft;
+              mouse.y = e.pageY - this.offsetTop;
 
-          context.fillStyle = "white";
-          context.strokeStyle = "#FFFFFF";
+              context.fillStyle = "white";
+              context.strokeStyle = "#FFFFFF";
+              context.beginPath();
+              context.moveTo(mouse.x, mouse.y);
+              context.lineTo(mouse.x - e.movementX, mouse.y - e.movementY);
+              context.stroke();
+              context.closePath();
+          }
+      });
+      canvas.addEventListener("pointerup", function(e) {
+          mouse.x = e.pageX - this.offsetLeft;
+          mouse.y = e.pageY - this.offsetTop;
+          draw = false;
+      });
+    }
+  else{
+
+  canvas.addEventListener("touchstart", function(evt) {
+    evt.preventDefault();
+    var touches = evt.changedTouches;
+
+    for (var i = 0; i < touches.length; i++) {
+      ongoingTouches.push(copyTouch(touches[i]));
+      var color = "white";
+      context.beginPath();
+      context.arc(touches[i].pageX, touches[i].pageY, 4, 0, 2 * Math.PI, false);
+      context.fillStyle = color;
+      context.fill();
+    }
+  });
+  function ongoingTouchIndexById(idToFind) {
+    for (var i = 0; i < ongoingTouches.length; i++) {
+      var id = ongoingTouches[i].identifier;
+
+      if (id == idToFind) {
+        return i;
+      }
+    }
+    return -1;    // not found
+  }
+  canvas.addEventListener("touchmove", function(e) {
+      var touches = e.changedTouches;
+
+      for (var i = 0; i < touches.length; i++) {
+        var idx = ongoingTouchIndexById(touches[i].identifier);
+
+        if (idx >= 0) {
           context.beginPath();
-          context.moveTo(mouse.x, mouse.y);
-          context.lineTo(mouse.x - e.movementX, mouse.y - e.movementY);
+          context.moveTo(ongoingTouches[idx].pageX, ongoingTouches[idx].pageY);
+          context.lineTo(touches[i].pageX, touches[i].pageY);
+          context.lineWidth = pensize;
+          context.strokeStyle = "white";
           context.stroke();
-          context.closePath();
+
+          ongoingTouches.splice(idx, 1, copyTouch(touches[i]));
+        } else {
+        }
       }
   });
-  canvas.addEventListener("pointerup", function(e) {
-      mouse.x = e.pageX - this.offsetLeft;
-      mouse.y = e.pageY - this.offsetTop;
-      draw = false;
+  function copyTouch({ identifier, pageX, pageY }) {
+    return { identifier, pageX, pageY };
+  }
+  canvas.addEventListener("touchend", function(evt) {
+    evt.preventDefault();
+    var touches = evt.changedTouches;
+
+    for (var i = 0; i < touches.length; i++) {
+      var color = "white";
+      var idx = ongoingTouchIndexById(touches[i].identifier);
+
+      if (idx >= 0) {
+        context.lineWidth = 4;
+        context.fillStyle = color;
+        context.beginPath();
+        context.moveTo(ongoingTouches[idx].pageX, ongoingTouches[idx].pageY);
+        context.lineTo(touches[i].pageX, touches[i].pageY);
+        context.fillRect(touches[i].pageX - 4, touches[i].pageY - 4, 8, 8);
+        ongoingTouches.splice(idx, 1);
+      } else {
+      }
+    }
   });
+}
+
 
   div.appendChild(canvas);
   var obj = {};
@@ -227,8 +312,8 @@ function createPredictor(div, width, height, pensize, models_addr) {
     ctx.fillRect(0, 0, w, h);
   }
   obj.clear_canvases = clear_canvases;
-  obj.predict = function(model_name, models_addr) {
-    return predict(this.main_canv, model_name, models_addr);
+  obj.predict = function(models_addr) {
+    return predict(this.main_canv);
   };
-  return obj;
+  return [obj, canvas.id];
 }
