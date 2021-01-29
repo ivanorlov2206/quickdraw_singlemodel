@@ -2,6 +2,7 @@ importScripts('tf.min.js');
 
 async function start(models_addr) {
   model = await tf.loadGraphModel(models_addr + '/model/model.json');
+  postMessage('ready');
 }
 
 onmessage = async function (event) {
