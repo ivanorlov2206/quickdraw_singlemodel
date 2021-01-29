@@ -86,13 +86,22 @@
           predictor.clear_canvases();
           predictor.clear_canvas();
         });
+
+        window.mobileAndTabletCheck = function() {
+          return typeof(window.orientation) !== 'undefined';
+        };
+
         var snd = document.getElementById("send");
         console.log(canvases);
         var canv = document.getElementById(predictord[1]);
-        canv.addEventListener("mouseup", function() {
+        function runpred() {
           var arr = process_image(canv, 64);
           worker.postMessage("predict;;;" + JSON.stringify(arr));
-        });
+        }
+        if (!window.mobileAndTabletCheck())
+          canv.addEventListener("mouseup", runpred);
+        else
+          canv.addEventListener("touchend", runpred);
 
 
     </script>
