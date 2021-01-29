@@ -145,11 +145,6 @@ function clear_canvases() {
 
 
 function createPredictor(div, width, height, pensize, models_addr) {
-  (async () => {
-    document.getElementById('result').innerHTML = "Загрузка модели...";
-  model = await tf.loadGraphModel(models_addr + '/model/model.json');
-  document.getElementById('result').innerHTML = "Загружено!...";
-  })();
 
   function loadUtils() {
     var oReq = new XMLHttpRequest();
