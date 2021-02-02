@@ -12,3 +12,7 @@ def send_model(path):
 @app.route('/<path:path>')
 def send_file(path):
     return send_from_directory('.', path)
+
+
+if __name__ == "main":
+    app.run()

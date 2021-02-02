@@ -26,8 +26,12 @@ onmessage = async function (event) {
     var ind_js = Array.from(indices.dataSync());
     var val_js = Array.from(values.dataSync());
     var resarr = {};
+    var sum = 0;
     ind_js.map(function(e, i) {
-      resarr[classes[ind_js[i]]] = val_js[i];
+      sum += val_js[i];
+    });
+    ind_js.map(function(e, i) {
+      resarr[classes[ind_js[i]]] = val_js[i] / sum;
     });
     console.log(JSON.stringify(resarr));
     postMessage("predres;;;" + JSON.stringify(resarr));
