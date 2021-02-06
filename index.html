@@ -46,11 +46,11 @@
           }
       });
       var worker = new Worker('worker.js');
-      var predictord = createPredictor(document.getElementById("test_div"), 300, 300, 5, 'https://quickdrawmyquiz.onrender.com');
+      var predictord = createPredictor(document.getElementById("test_div"), 300, 300, 5, 'http://127.0.0.1:8000');
       var predictor = predictord[0];
       var rd = document.getElementById("result");
         var worker = new Worker('worker.js');
-        worker.postMessage('start;;;https://quickdrawmyquiz.onrender.com')
+        worker.postMessage('start;;;http://127.0.0.1:8000')
 
         worker.onmessage = function(msg) {
           var pars = msg.data.split(';;;');
